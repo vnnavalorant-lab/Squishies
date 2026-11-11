@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "squishies",
+  "version": "1.0.0",
+  "name": "Squishies ASMR",
+  "description": "Squishies ASMR (Needoh, Gumdrop, Butter, Crunchy Butter, Dumpling) que achatam quando alguem pisa. Baseado nos modelos de @rvn4x do Roblox.",
+  "authors": [
+    "rvn4x (modelos originais, Roblox)"
+  ],
+  "license": "CC0-1.0",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.squishies.SquishiesMod"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.15.0",
+    "minecraft": "~1.20.1",
+    "java": ">=17",
+    "fabric-api": "*"
+  }
+}

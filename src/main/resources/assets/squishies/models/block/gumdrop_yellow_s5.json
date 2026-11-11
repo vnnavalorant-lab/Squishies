@@ -1,0 +1,136 @@
+{
+  "textures": {
+    "t": "squishies:block/gumdrop_yellow",
+    "particle": "squishies:block/gumdrop_yellow"
+  },
+  "elements": [
+    {
+      "from": [
+        4.92,
+        0,
+        3.92
+      ],
+      "to": [
+        11.08,
+        4.705,
+        12.08
+      ],
+      "faces": {
+        "north": {
+          "texture": "#t"
+        },
+        "east": {
+          "texture": "#t"
+        },
+        "south": {
+          "texture": "#t"
+        },
+        "west": {
+          "texture": "#t"
+        },
+        "up": {
+          "texture": "#t"
+        },
+        "down": {
+          "texture": "#t"
+        }
+      }
+    },
+    {
+      "from": [
+        3.92,
+        0,
+        4.92
+      ],
+      "to": [
+        12.08,
+        4.705,
+        11.08
+      ],
+      "faces": {
+        "north": {
+          "texture": "#t"
+        },
+        "east": {
+          "texture": "#t"
+        },
+        "south": {
+          "texture": "#t"
+        },
+        "west": {
+          "texture": "#t"
+        },
+        "up": {
+          "texture": "#t"
+        },
+        "down": {
+          "texture": "#t"
+        }
+      }
+    },
+    {
+      "from": [
+        3.92,
+        1.0,
+        3.92
+      ],
+      "to": [
+        12.08,
+        3.705,
+        12.08
+      ],
+      "faces": {
+        "north": {
+          "texture": "#t"
+        },
+        "east": {
+          "texture": "#t"
+        },
+        "south": {
+          "texture": "#t"
+        },
+        "west": {
+          "texture": "#t"
+        },
+        "up": {
+          "texture": "#t"
+        },
+        "down": {
+          "texture": "#t"
+        }
+      }
+    },
+    {
+      "from": [
+        4.654,
+        4.705,
+        4.654
+      ],
+      "to": [
+        11.346,
+        7.238,
+        11.346
+      ],
+      "faces": {
+        "north": {
+          "texture": "#t"
+        },
+        "east": {
+          "texture": "#t"
+        },
+        "south": {
+          "texture": "#t"
+        },
+        "west": {
+          "texture": "#t"
+        },
+        "up": {
+          "texture": "#t"
+        },
+        "down": {
+          "texture": "#t"
+        }
+      }
+    }
+  ]
+}
