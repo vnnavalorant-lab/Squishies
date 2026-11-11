@@ -15,17 +15,24 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/** Monta as malhas: o OBJ do butter e formas macias (superelipsoides) para o resto. */
+/**
+ * Monta as malhas: o OBJ do butter e formas macias (superelipsoides) para o resto.
+ * Toda malha sai daqui como SquishyMesh, entao TODOS os modelos amassam do mesmo jeito.
+ * Espaco da malha: X em [0, length] (eixo da fila), Z em [0, 1], Y para cima a partir de 0.
+ */
 public final class MeshFactory {
     private MeshFactory() {}
 
+    private static final float MAX_EDGE = 0.12f;   // aresta alvo (blocos) para a deformacao ficar suave
+    private static final long MAX_TRIS = 26000;    // teto de triangulos por malha (custo por frame)
+
     public static SquishyMesh build(SquishyType t) throws IOException {
         switch (t.meshKey) {
-            case "needoh":   return superellipsoid(t, 0.40f, 0.40f, true, 22, 44);
-            case "gumdrop":  return superellipsoid(t, 0.75f, 0.85f, false, 16, 44);
-            case "dumpling": return superellipsoid(t, 0.60f, 0.90f, false, 16, 48);
-            case "butter":   return fromObj(t, new Identifier("squishies", "models/obj/butter.obj"));
-            default: throw new IOException("malha desconhecida: " + t.meshKey);
+            case "needoh":   return superellipsoid(t, 0.40f, 0.40f, true, 28, 56);
+            case "gumdrop":  return superellipsoid(t, 0.75f, 0.85f, false, 20, 56);
+            case "dumpling": return superellipsoid(t, 0.60f, 0.90f, false, 24, 64);
+            // qualquer outro nome = um .obj em models/obj/<nome>.obj (ja entra no mesmo sistema de malha maleavel)
+            default: return fromObj(t, new Identifier("squishies", "models/obj/" + t.meshKey + ".obj"));
         }
     }
 
@@ -112,28 +119,31 @@ public final class MeshFactory {
             }
         }
         // caixa envolvente global -> escala para a largura (eixo X) do tipo, centraliza em XZ, base em y=0
-        float minX = Float.MAX_VALUE, maxX = -Float.MAX_VALUE, minY = Float.MAX_VALUE, minZ = Float.MAX_VALUE, maxZ = -Float.MAX_VALUE;
+        float minX = Float.MAX_VALUE, maxX = -Float.MAX_VALUE, minY = Float.MAX_VALUE, maxY = -Float.MAX_VALUE;
+        float minZ = Float.MAX_VALUE, maxZ = -Float.MAX_VALUE;
         for (float[] v : V) {
             minX = Math.min(minX, v[0]); maxX = Math.max(maxX, v[0]);
-            minY = Math.min(minY, v[1]);
+            minY = Math.min(minY, v[1]); maxY = Math.max(maxY, v[1]);
             minZ = Math.min(minZ, v[2]); maxZ = Math.max(maxZ, v[2]);
         }
-        float scale = t.w / (maxX - minX);
+        // escala por eixo: o modelo preenche exatamente w (comprimento) x h (altura) x d (largura) do tipo
+        float scaleX = t.w / (maxX - minX), scaleY = t.h / (maxY - minY), scaleZ = t.d / (maxZ - minZ);
         float cx = (minX + maxX) / 2f, cz = (minZ + maxZ) / 2f;
+        float outX = t.length / 2f, outZ = 0.5f;      // centro da malha no espaco da fila
 
-        SquishyMesh mesh = new SquishyMesh();
+        List<MeshLayer> built = new ArrayList<>();
         for (int gi = 0; gi < groups.size(); gi++) {
             Group g = groups.get(gi);
             if (g.tris.isEmpty()) continue;
-            boolean body = mesh.layers.isEmpty();     // primeiro grupo = corpo; os demais = etiqueta
+            boolean body = built.isEmpty();     // primeiro grupo = corpo; os demais = etiqueta
             int n = g.verts.size();
             MeshLayer l = new MeshLayer(body ? "body" : "label", !body, n);
             l.fnx = new float[n]; l.fny = new float[n]; l.fnz = new float[n];
             for (int i = 0; i < n; i++) {
                 float[] v = g.verts.get(i);
-                l.x[i] = (v[0] - cx) * scale + 0.5f;
-                l.y[i] = (v[1] - minY) * scale;
-                l.z[i] = (v[2] - cz) * scale + 0.5f;
+                l.x[i] = (v[0] - cx) * scaleX + outX;
+                l.y[i] = (v[1] - minY) * scaleY;
+                l.z[i] = (v[2] - cz) * scaleZ + outZ;
                 if (body) { l.u[i] = 0.5f; l.v[i] = 0.5f; }   // corpo usa cor lisa
                 else { l.u[i] = v[3]; l.v[i] = 1f - v[4]; }
                 l.fnx[i] = v[5]; l.fny[i] = v[6]; l.fnz[i] = v[7];
@@ -141,10 +151,27 @@ public final class MeshFactory {
             l.tri = new int[g.tris.size()];
             for (int i = 0; i < l.tri.length; i++) l.tri[i] = g.tris.get(i);
             l.orientByFileNormals();
-            mesh.layers.add(l.subdivide());   // 1 nivel: cova mais suave em malha esparsa
+            built.add(l);
+        }
+        // mesma quantidade de subdivisoes em todas as camadas (corpo e etiqueta continuam colados ao deformar)
+        int levels = subdivisionLevels(built);
+        SquishyMesh mesh = new SquishyMesh();
+        for (MeshLayer l : built) {
+            for (int k = 0; k < levels; k++) l = l.subdivide();
+            mesh.layers.add(l);
         }
         mesh.finish();
         return mesh;
+    }
+
+    /** Quantas vezes subdividir: ate a maior aresta ficar pequena, respeitando o teto de triangulos. */
+    private static int subdivisionLevels(List<MeshLayer> layers) {
+        float edge = 0f;
+        long tris = 0;
+        for (MeshLayer l : layers) { edge = Math.max(edge, l.maxEdge()); tris += l.tri.length / 3; }
+        int levels = 0;
+        while (levels < 4 && edge > MAX_EDGE && tris * 4 <= MAX_TRIS) { levels++; edge /= 2f; tris *= 4; }
+        return Math.max(levels, 1);
     }
 
     private static int vertexOf(Group g, String token, List<float[]> V, List<float[]> VT, List<float[]> VN) {

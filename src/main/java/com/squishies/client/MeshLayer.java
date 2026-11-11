@@ -25,6 +25,19 @@ public class MeshLayer {
     }
 
 
+    /** Maior aresta (em blocos) entre todos os triangulos da camada. */
+    public float maxEdge() {
+        float m = 0f;
+        for (int t = 0; t < tri.length; t += 3) {
+            for (int e = 0; e < 3; e++) {
+                int a = tri[t + e], b = tri[t + (e + 1) % 3];
+                float dx = x[a] - x[b], dy = y[a] - y[b], dz = z[a] - z[b];
+                m = Math.max(m, dx * dx + dy * dy + dz * dz);
+            }
+        }
+        return (float) Math.sqrt(m);
+    }
+
     /** Subdivide cada triangulo em 4 (pontos medios) para a deformacao ficar suave em malhas esparsas. */
     public MeshLayer subdivide() {
         int n = x.length, T = tri.length / 3;

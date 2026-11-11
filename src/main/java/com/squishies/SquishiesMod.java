@@ -62,11 +62,13 @@ public class SquishiesMod implements ModInitializer {
     @Override
     public void onInitialize() {
         ModSounds.init();
-        TYPES.put("needoh", new SquishyType("needoh", "needoh", 0.51f, 0.51f, 0.51f, 0.4f, ModSounds.NEEDOH_PRESS, ModSounds.NEEDOH_RELEASE, 1.0f));
-        TYPES.put("gumdrop", new SquishyType("gumdrop", "gumdrop", 0.51f, 0.49f, 0.51f, 0.4f, ModSounds.NEEDOH_PRESS, ModSounds.NEEDOH_RELEASE, 1.0f));
-        TYPES.put("dumpling", new SquishyType("dumpling", "dumpling", 0.94f, 0.5f, 0.94f, 0.45f, ModSounds.DUMPLING_SQUISH, null, 1.0f));
-        TYPES.put("butter", new SquishyType("butter", "butter", 0.9f, 0.2029f, 0.4047f, 0.4f, ModSounds.BUTTER_PRESS, ModSounds.BUTTER_RELEASE, 1.0f));
-        TYPES.put("butter_crunchy", new SquishyType("butter_crunchy", "butter", 0.9f, 0.2029f, 0.4047f, 0.4f, ModSounds.CRUNCHY_PRESS, ModSounds.CRUNCHY_RELEASE, 2.0f));
+        // (id, malha, blocos em fila, comprimento, altura, largura, fracao da colisao, sons...)
+        TYPES.put("needoh", new SquishyType("needoh", "needoh", 1, 0.70f, 0.70f, 0.70f, 0.4f, ModSounds.NEEDOH_PRESS, ModSounds.NEEDOH_RELEASE, 1.0f));
+        TYPES.put("gumdrop", new SquishyType("gumdrop", "gumdrop", 1, 0.70f, 0.67f, 0.70f, 0.4f, ModSounds.NEEDOH_PRESS, ModSounds.NEEDOH_RELEASE, 1.0f));
+        TYPES.put("dumpling", new SquishyType("dumpling", "dumpling", 1, 1.0f, 0.62f, 1.0f, 0.45f, ModSounds.DUMPLING_SQUISH, null, 1.0f));
+        // butter: multibloco de 3x1 blocos (3 de comprimento, 1 de largura)
+        TYPES.put("butter", new SquishyType("butter", "butter", 3, 3.0f, 0.5f, 1.0f, 0.4f, ModSounds.BUTTER_PRESS, ModSounds.BUTTER_RELEASE, 1.0f));
+        TYPES.put("butter_crunchy", new SquishyType("butter_crunchy", "butter", 3, 3.0f, 0.5f, 1.0f, 0.4f, ModSounds.CRUNCHY_PRESS, ModSounds.CRUNCHY_RELEASE, 2.0f));
         List<Item> items = new ArrayList<>();
         for (String[] b : BLOCKS) {
             Identifier id = new Identifier(MOD_ID, b[0]);
