@@ -56,19 +56,36 @@ public class SquishiesMod implements ModInitializer {
         {"butter_pink", "butter"},
         {"butter_lilac", "butter"},
         {"butter_blue", "butter_crunchy"},
-        {"butter_mint", "butter_crunchy"}
+        {"butter_mint", "butter_crunchy"},
+        {"face_dumpling_white", "face_dumpling"},
+        {"face_dumpling_brown", "face_dumpling"},
+        {"face_dumpling_black", "face_dumpling"},
+        {"face_dumpling_gray", "face_dumpling"},
+        {"face_dumpling_navy", "face_dumpling"},
+        {"face_dumpling_pink", "face_dumpling"},
+        {"face_dumpling_purple", "face_dumpling"},
+        {"face_dumpling_blue", "face_dumpling"},
+        {"face_dumpling_green", "face_dumpling"},
+        {"face_dumpling_lime", "face_dumpling"},
+        {"face_dumpling_red", "face_dumpling"},
+        {"face_dumpling_yellow", "face_dumpling"},
+        {"face_dumpling_orange", "face_dumpling"}
     };
 
     @Override
     public void onInitialize() {
         ModSounds.init();
-        // (id, malha, blocos em fila, comprimento, altura, largura, fracao da colisao, sons...)
-        TYPES.put("needoh", new SquishyType("needoh", "needoh", 1, 0.70f, 0.70f, 0.70f, 0.4f, ModSounds.NEEDOH_PRESS, ModSounds.NEEDOH_RELEASE, 1.0f));
-        TYPES.put("gumdrop", new SquishyType("gumdrop", "gumdrop", 1, 0.70f, 0.67f, 0.70f, 0.4f, ModSounds.NEEDOH_PRESS, ModSounds.NEEDOH_RELEASE, 1.0f));
-        TYPES.put("dumpling", new SquishyType("dumpling", "dumpling", 1, 1.0f, 0.62f, 1.0f, 0.45f, ModSounds.DUMPLING_SQUISH, null, 1.0f));
+        // (id, malha, blocos em X, blocos em Z, comprimento, altura, largura, fracao da colisao, sons...)
+        TYPES.put("needoh", new SquishyType("needoh", "needoh", 1, 1, 0.70f, 0.70f, 0.70f, 0.4f, ModSounds.NEEDOH_PRESS, ModSounds.NEEDOH_RELEASE, 1.0f));
+        TYPES.put("gumdrop", new SquishyType("gumdrop", "gumdrop", 1, 1, 0.70f, 0.67f, 0.70f, 0.4f, ModSounds.NEEDOH_PRESS, ModSounds.NEEDOH_RELEASE, 1.0f));
+        TYPES.put("dumpling", new SquishyType("dumpling", "dumpling", 1, 1, 1.0f, 0.62f, 1.0f, 0.45f, ModSounds.DUMPLING_SQUISH, null, 1.0f));
         // butter: multibloco de 3x1 blocos (3 de comprimento, 1 de largura)
-        TYPES.put("butter", new SquishyType("butter", "butter", 3, 3.0f, 0.5f, 1.0f, 0.4f, ModSounds.BUTTER_PRESS, ModSounds.BUTTER_RELEASE, 1.0f));
-        TYPES.put("butter_crunchy", new SquishyType("butter_crunchy", "butter", 3, 3.0f, 0.5f, 1.0f, 0.4f, ModSounds.CRUNCHY_PRESS, ModSounds.CRUNCHY_RELEASE, 2.0f));
+        TYPES.put("butter", new SquishyType("butter", "butter", 3, 1, 3.0f, 0.5f, 1.0f, 0.4f, ModSounds.BUTTER_PRESS, ModSounds.BUTTER_RELEASE, 1.0f));
+        TYPES.put("butter_crunchy", new SquishyType("butter_crunchy", "butter", 3, 1, 3.0f, 0.5f, 1.0f, 0.4f, ModSounds.CRUNCHY_PRESS, ModSounds.CRUNCHY_RELEASE, 2.0f));
+        // dumpling com rosto: 1,5 bloco de largura, multibloco 2x2 (a malha de 1,5 fica centralizada na grade).
+        // meshRot=1 vira o rosto do OBJ (+Z) para -X da malha, ou seja, de frente para quem colocou o bloco.
+        TYPES.put("face_dumpling", new SquishyType("face_dumpling", "face_dumpling", 2, 2, 1.5f, 1.02f, 1.5f, 0.45f,
+                ModSounds.DUMPLING_SQUISH, null, 1.0f).withMeshRot(1).withSharedLabel("face_dumpling_face"));
         List<Item> items = new ArrayList<>();
         for (String[] b : BLOCKS) {
             Identifier id = new Identifier(MOD_ID, b[0]);

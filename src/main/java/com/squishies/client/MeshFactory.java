@@ -131,6 +131,14 @@ public final class MeshFactory {
                 }
             }
         }
+        // gira o OBJ em quartos de volta (Y) para a frente do modelo apontar para -X da malha
+        for (int k = 0; k < t.meshRot; k++) {
+            for (float[] v : V) { float x = v[0]; v[0] = -v[2]; v[2] = x; }
+            for (Group g : groups) for (float[] v : g.verts) {
+                float x = v[0]; v[0] = -v[2]; v[2] = x;
+                float nx = v[5]; v[5] = -v[7]; v[7] = nx;
+            }
+        }
         // caixa envolvente global -> escala para a largura (eixo X) do tipo, centraliza em XZ, base em y=0
         float minX = Float.MAX_VALUE, maxX = -Float.MAX_VALUE, minY = Float.MAX_VALUE, maxY = -Float.MAX_VALUE;
         float minZ = Float.MAX_VALUE, maxZ = -Float.MAX_VALUE;
@@ -142,7 +150,7 @@ public final class MeshFactory {
         // escala por eixo: o modelo preenche exatamente w (comprimento) x h (altura) x d (largura) do tipo
         float scaleX = t.w / (maxX - minX), scaleY = t.h / (maxY - minY), scaleZ = t.d / (maxZ - minZ);
         float cx = (minX + maxX) / 2f, cz = (minZ + maxZ) / 2f;
-        float outX = t.length / 2f, outZ = 0.5f;      // centro da malha no espaco da fila
+        float outX = t.cellsX / 2f, outZ = t.cellsZ / 2f;   // centro da malha no espaco da grade
 
         List<MeshLayer> built = new ArrayList<>();
         for (int gi = 0; gi < groups.size(); gi++) {
@@ -191,7 +199,7 @@ public final class MeshFactory {
         for (MeshLayer l : layers) { edge = Math.max(edge, l.maxEdge()); tris += l.tri.length / 3; }
         int levels = 0;
         while (levels < 4 && edge > MAX_EDGE && tris * 4 <= MAX_TRIS) { levels++; edge /= 2f; tris *= 4; }
-        return Math.max(levels, 1);
+        return levels;
     }
 
     private static int vertexOf(Group g, String token, List<float[]> V, List<float[]> VT, List<float[]> VN) {

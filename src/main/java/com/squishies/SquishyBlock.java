@@ -32,11 +32,12 @@ import net.minecraft.world.WorldAccess;
  * O visual (malha deformavel) e desenhado pelo BlockEntityRenderer no cliente.
  * Aqui ficam a hitbox, os sons de apertar/soltar e a logica de multibloco (butter = 3x1 blocos).
  *
- * FACING = direcao da fila (parte 0 -> ultima parte). PART = indice do bloco na fila (sempre 0 nos tipos de 1 bloco).
+ * Multibloco: grade cellsX x cellsZ. FACING = direcao do eixo X da grade; o eixo Z vai para a direita do FACING.
+ * PART = i + j * cellsX (i ao longo do FACING, j para a direita); a parte 0 e o canto de origem (sempre 0 nos tipos de 1 bloco).
  */
 public class SquishyBlock extends Block implements BlockEntityProvider {
     public static final DirectionProperty FACING = Properties.HORIZONTAL_FACING;
-    public static final IntProperty PART = IntProperty.of("part", 0, SquishyType.MAX_LENGTH - 1);
+    public static final IntProperty PART = IntProperty.of("part", 0, SquishyType.MAX_PARTS - 1);
 
     private final SquishyType type;
     private final String variantId;
@@ -48,21 +49,32 @@ public class SquishyBlock extends Block implements BlockEntityProvider {
         this.type = type;
         this.variantId = variantId;
         this.bodyTexture = new Identifier(SquishiesMod.MOD_ID, "textures/entity/" + variantId + ".png");
-        this.labelTexture = new Identifier(SquishiesMod.MOD_ID, "textures/entity/" + variantId + "_label.png");
+        this.labelTexture = new Identifier(SquishiesMod.MOD_ID, "textures/entity/"
+                + (type.sharedLabel != null ? type.sharedLabel : variantId + "_label") + ".png");
         setDefaultState(getStateManager().getDefaultState().with(FACING, Direction.NORTH).with(PART, 0));
     }
 
     public SquishyType type() { return type; }
     public String variantId() { return variantId; }
 
-    /** So esta parte desenha a malha (a do meio da fila); as outras apenas ocupam espaco. */
+    /** So esta parte desenha a malha inteira (a mais central da grade); as outras apenas ocupam espaco. */
     public boolean isMaster(BlockState state) {
-        return type.length == 1 || state.get(PART) == type.masterPart();
+        return state.get(PART) == type.masterPart();
     }
 
-    /** Posicao da parte 0 (inicio da fila). */
+    private static Direction across(Direction f) { return f.rotateYClockwise(); }
+
+    /** Posicao do bloco da grade (i, j) a partir da origem (parte 0). */
+    private BlockPos cellPos(BlockPos origin, Direction f, int part) {
+        int i = part % type.cellsX, j = part / type.cellsX;
+        return origin.offset(f, i).offset(across(f), j);
+    }
+
+    /** Posicao da parte 0 (canto de origem da grade). */
     public BlockPos originOf(BlockPos pos, BlockState state) {
-        return type.length == 1 ? pos : pos.offset(state.get(FACING).getOpposite(), state.get(PART));
+        Direction f = state.get(FACING);
+        int part = state.get(PART), i = part % type.cellsX, j = part / type.cellsX;
+        return pos.offset(f.getOpposite(), i).offset(across(f).getOpposite(), j);
     }
 
     @Override
@@ -75,31 +87,35 @@ public class SquishyBlock extends Block implements BlockEntityProvider {
         Direction f = ctx.getHorizontalPlayerFacing();
         World world = ctx.getWorld();
         BlockPos origin = ctx.getBlockPos();
-        for (int i = 1; i < type.length; i++) {      // a fila inteira precisa estar livre
-            BlockPos p = origin.offset(f, i);
-            if (world.isOutOfHeightLimit(p) || !world.getWorldBorder().contains(p)) return null;
-            if (!world.getBlockState(p).canReplace(ctx)) return null;
+        for (int p = 1; p < type.cells(); p++) {      // a grade inteira precisa estar livre
+            BlockPos q = cellPos(origin, f, p);
+            if (world.isOutOfHeightLimit(q) || !world.getWorldBorder().contains(q)) return null;
+            if (!world.getBlockState(q).canReplace(ctx)) return null;
         }
         return getDefaultState().with(FACING, f).with(PART, 0);
     }
 
     @Override
     public void onPlaced(World world, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack) {
-        if (type.length == 1) return;
+        if (type.cells() == 1) return;
         Direction f = state.get(FACING);
-        for (int i = 1; i < type.length; i++) {
-            world.setBlockState(pos.offset(f, i), state.with(PART, i), Block.NOTIFY_ALL);
+        for (int p = 1; p < type.cells(); p++) {
+            world.setBlockState(cellPos(pos, f, p), state.with(PART, p), Block.NOTIFY_ALL);
         }
     }
 
     @Override
     public BlockState getStateForNeighborUpdate(BlockState state, Direction dir, BlockState neighbor,
                                                 WorldAccess world, BlockPos pos, BlockPos neighborPos) {
-        if (type.length > 1) {
-            Direction f = state.get(FACING);
-            int part = state.get(PART);
-            if (dir == f && part < type.length - 1 && !isPart(neighbor, f, part + 1)) return Blocks.AIR.getDefaultState();
-            if (dir == f.getOpposite() && part > 0 && !isPart(neighbor, f, part - 1)) return Blocks.AIR.getDefaultState();
+        if (type.cells() > 1) {
+            Direction f = state.get(FACING), a = across(f);
+            int part = state.get(PART), i = part % type.cellsX, j = part / type.cellsX;
+            int want = -1;                                   // parte que deve existir do outro lado
+            if (dir == f && i + 1 < type.cellsX) want = part + 1;
+            else if (dir == f.getOpposite() && i > 0) want = part - 1;
+            else if (dir == a && j + 1 < type.cellsZ) want = part + type.cellsX;
+            else if (dir == a.getOpposite() && j > 0) want = part - type.cellsX;
+            if (want >= 0 && !isPart(neighbor, f, want)) return Blocks.AIR.getDefaultState();
         }
         return super.getStateForNeighborUpdate(state, dir, neighbor, world, pos, neighborPos);
     }
@@ -110,17 +126,17 @@ public class SquishyBlock extends Block implements BlockEntityProvider {
 
     @Override
     public void onBreak(World world, BlockPos pos, BlockState state, PlayerEntity player) {
-        if (type.length > 1 && !world.isClient) {
+        if (type.cells() > 1 && !world.isClient) {
             BlockPos origin = originOf(pos, state);
             Direction f = state.get(FACING);
             // o item so cai da parte 0 (loot table): se quebrou outra parte, solta o drop da parte 0 aqui
             if (!player.isCreative() && state.get(PART) != 0) {
                 Block.dropStacks(state.with(PART, 0), world, origin, null, player, player.getMainHandStack());
             }
-            for (int i = 0; i < type.length; i++) {
-                BlockPos p = origin.offset(f, i);
-                if (!p.equals(pos) && world.getBlockState(p).isOf(this)) {
-                    world.setBlockState(p, Blocks.AIR.getDefaultState(), Block.NOTIFY_ALL | Block.SKIP_DROPS);
+            for (int p = 0; p < type.cells(); p++) {
+                BlockPos q = cellPos(origin, f, p);
+                if (!q.equals(pos) && world.getBlockState(q).isOf(this)) {
+                    world.setBlockState(q, Blocks.AIR.getDefaultState(), Block.NOTIFY_ALL | Block.SKIP_DROPS);
                 }
             }
         }
@@ -139,12 +155,12 @@ public class SquishyBlock extends Block implements BlockEntityProvider {
 
     @Override
     public VoxelShape getOutlineShape(BlockState state, BlockView world, BlockPos pos, ShapeContext ctx) {
-        return type.outline();
+        return type.outline(state.get(FACING), state.get(PART));
     }
 
     @Override
     public VoxelShape getCollisionShape(BlockState state, BlockView world, BlockPos pos, ShapeContext ctx) {
-        return type.collision();
+        return type.collision(state.get(FACING), state.get(PART));
     }
 
     @Override

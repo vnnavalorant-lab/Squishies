@@ -56,7 +56,7 @@ public class SquishyRenderer implements BlockEntityRenderer<SquishyBlockEntity> 
         Vec3d cp = cam.getPos();
         double vx = pos.getX() + 0.5 - cp.x, vy = pos.getY() + 0.25 - cp.y, vz = pos.getZ() + 0.5 - cp.z;
         double dist2 = vx * vx + vy * vy + vz * vz;
-        double reach = type.length * 0.5 + 1.0;                 // raio aproximado da malha
+        double reach = Math.sqrt(type.cellsX * type.cellsX + type.cellsZ * type.cellsZ) * 0.5 + 1.0;   // raio aproximado da malha
         if (dist2 > reach * reach * 4.0) {
             double yaw = Math.toRadians(cam.getYaw()), pitch = Math.toRadians(cam.getPitch());
             double fx = -Math.sin(yaw) * Math.cos(pitch), fy = -Math.sin(pitch), fz = Math.cos(yaw) * Math.cos(pitch);
@@ -65,16 +65,18 @@ public class SquishyRenderer implements BlockEntityRenderer<SquishyBlockEntity> 
         }
         boolean active = dist2 < ACTIVE_DIST2;                   // perto o bastante para amassar
 
-        // espaco da malha: X em [0, length] ao longo da fila, Z em [0, 1]. A parte do meio fica no centro do bloco.
-        int len = type.length, m = type.masterPart();
-        Direction f = len > 1 ? state.get(SquishyBlock.FACING) : Direction.EAST;
-        float angle = len > 1 ? 270f - f.asRotation() : 0f;     // gira o eixo X da malha para a direcao da fila
+        // espaco da malha: X em [0, cellsX] ao longo do FACING, Z em [0, cellsZ] para a direita. O bloco mestre fica no centro.
+        int cx = type.cellsX, cz = type.cellsZ, mi = type.masterI(), mj = type.masterJ();
+        boolean multi = type.cells() > 1;
+        Direction f = multi ? state.get(SquishyBlock.FACING) : Direction.EAST;
+        Direction across = f.rotateYClockwise();
+        float angle = multi ? 270f - f.asRotation() : 0f;       // gira o eixo X da malha para a direcao do FACING
         float cos = (float) Math.cos(Math.toRadians(angle)), sin = (float) Math.sin(Math.toRadians(angle));
-        float meshOx = m + 0.5f;                                 // X da malha sob o centro do bloco mestre
+        float meshOx = mi + 0.5f, meshOz = mj + 0.5f;           // ponto da malha sob o centro do bloco mestre
 
-        // caixa (em coordenadas do mundo) de toda a fila de blocos
-        BlockPos first = len > 1 ? pos.offset(f.getOpposite(), m) : pos;
-        BlockPos last = len > 1 ? first.offset(f, len - 1) : pos;
+        // caixa (em coordenadas do mundo) da grade inteira de blocos
+        BlockPos first = multi ? pos.offset(f.getOpposite(), mi).offset(across.getOpposite(), mj) : pos;
+        BlockPos last = multi ? first.offset(f, cx - 1).offset(across, cz - 1) : pos;
         Box box = new Box(Math.min(first.getX(), last.getX()), pos.getY(), Math.min(first.getZ(), last.getZ()),
                 Math.max(first.getX(), last.getX()) + 1, pos.getY() + mesh.height + 0.06, Math.max(first.getZ(), last.getZ()) + 1);
 
@@ -102,7 +104,7 @@ public class SquishyRenderer implements BlockEntityRenderer<SquishyBlockEntity> 
                 // mundo -> espaco da malha (inverso da rotacao aplicada ao desenhar)
                 float rx = (float) (p.x - (pos.getX() + 0.5)), rz = (float) (p.z - (pos.getZ() + 0.5));
                 ex = cos * rx - sin * rz + meshOx;
-                ez = sin * rx + cos * rz + 0.5f;
+                ez = sin * rx + cos * rz + meshOz;
                 rad = le.getWidth() * 0.5f + 0.08f;
             }
         }
@@ -111,7 +113,7 @@ public class SquishyRenderer implements BlockEntityRenderer<SquishyBlockEntity> 
         if (target == 0f && !be.hadContact && Math.abs(be.press) < 0.004f && Math.abs(be.vel) < 0.03f) {
             be.press = 0f; be.vel = 0f; be.lastTime = now;
             DEFORM.active = false;
-            drawMesh(mesh, block, matrices, vcp, light, overlay, len, angle, meshOx);
+            drawMesh(mesh, block, matrices, vcp, light, overlay, multi, angle, meshOx, meshOz);
             return;
         }
 
@@ -148,16 +150,16 @@ public class SquishyRenderer implements BlockEntityRenderer<SquishyBlockEntity> 
         DEFORM.press = be.press;
         DEFORM.cx = be.cx; DEFORM.cz = be.cz; DEFORM.r = Math.max(0.12f, be.radius);
 
-        drawMesh(mesh, block, matrices, vcp, light, overlay, len, angle, meshOx);
+        drawMesh(mesh, block, matrices, vcp, light, overlay, multi, angle, meshOx, meshOz);
     }
 
     private static void drawMesh(SquishyMesh mesh, SquishyBlock block, MatrixStack matrices, VertexConsumerProvider vcp,
-                                 int light, int overlay, int len, float angle, float meshOx) {
+                                 int light, int overlay, boolean multi, float angle, float meshOx, float meshOz) {
         matrices.push();
-        if (len > 1) {
+        if (multi) {
             matrices.translate(0.5, 0, 0.5);
             matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(angle));
-            matrices.translate(-meshOx, 0, -0.5);
+            matrices.translate(-meshOx, 0, -meshOz);
         }
         mesh.render(DEFORM, matrices, vcp, block.bodyTexture, block.labelTexture, light, overlay);
         matrices.pop();
@@ -178,7 +180,7 @@ public class SquishyRenderer implements BlockEntityRenderer<SquishyBlockEntity> 
         matrices.push();
         matrices.translate(0.5, 0.5, 0.5);
         matrices.scale(s, s, s);
-        matrices.translate(-type.length / 2f, -mesh.height / 2f, -0.5);
+        matrices.translate(-type.cellsX / 2f, -mesh.height / 2f, -type.cellsZ / 2f);
         mesh.render(null, matrices, vcp, block.bodyTexture, block.labelTexture, light, overlay);   // null = malha leve
         matrices.pop();
     }
