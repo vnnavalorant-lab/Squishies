@@ -3,7 +3,7 @@
   "id": "squishies",
   "version": "1.0.0",
   "name": "Squishies ASMR",
-  "description": "Squishies ASMR (Needoh, Gumdrop, Butter, Crunchy Butter, Dumpling) que achatam quando alguem pisa. Baseado nos modelos de @rvn4x do Roblox.",
+  "description": "Squishies macios que amassam exatamente onde o jogador pisa. Modelos originais do Roblox por @rvn4x.",
   "authors": [
     "rvn4x (modelos originais, Roblox)"
   ],
@@ -12,6 +12,9 @@
   "entrypoints": {
     "main": [
       "com.squishies.SquishiesMod"
+    ],
+    "client": [
+      "com.squishies.client.SquishiesClient"
     ]
   },
   "depends": {

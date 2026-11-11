@@ -13,12 +13,6 @@
   "block.squishies.gumdrop_yellow": "Gumdrop Needoh Yellow",
   "block.squishies.gumdrop_orange": "Gumdrop Needoh Orange",
   "block.squishies.gumdrop_red": "Gumdrop Needoh Red",
-  "block.squishies.butter_slab_pink": "Butter Slab Pink",
-  "block.squishies.butter_slab_yellow": "Butter Slab Yellow",
-  "block.squishies.butter_yellow": "Butter Yellow",
-  "block.squishies.butter_cream": "Butter Cream",
-  "block.squishies.crunchy_butter_light": "Crunchy Butter Light Blue",
-  "block.squishies.crunchy_butter_blue": "Crunchy Butter Blue",
   "block.squishies.dumpling_white": "Dumpling Squishy White",
   "block.squishies.dumpling_brown": "Dumpling Squishy Brown",
   "block.squishies.dumpling_black": "Dumpling Squishy Black",
@@ -31,5 +25,10 @@
   "block.squishies.dumpling_lime": "Dumpling Squishy Lime",
   "block.squishies.dumpling_red": "Dumpling Squishy Red",
   "block.squishies.dumpling_yellow": "Dumpling Squishy Yellow",
-  "block.squishies.dumpling_orange": "Dumpling Squishy Orange"
+  "block.squishies.dumpling_orange": "Dumpling Squishy Orange",
+  "block.squishies.butter_yellow": "Salted Butter Yellow",
+  "block.squishies.butter_pink": "Salted Butter Pink",
+  "block.squishies.butter_lilac": "Salted Butter Lilac",
+  "block.squishies.butter_blue": "Salted Butter Blue",
+  "block.squishies.butter_mint": "Salted Butter Mint"
 }
