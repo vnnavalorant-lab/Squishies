@@ -3,6 +3,8 @@ package com.squishies.client;
 import com.squishies.SquishyBlock;
 import com.squishies.SquishyBlockEntity;
 import com.squishies.SquishyType;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.block.entity.BlockEntityRenderer;
 import net.minecraft.client.render.block.entity.BlockEntityRendererFactory;
@@ -17,12 +19,23 @@ import net.minecraft.util.math.RotationAxis;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
+import java.util.Collections;
+import java.util.List;
+
 public class SquishyRenderer implements BlockEntityRenderer<SquishyBlockEntity> {
     private static final MeshDeform DEFORM = new MeshDeform();
     private static final float OMEGA = 15f;   // rigidez da mola (rad/s)
     private static final float ZETA = 0.30f;  // amortecimento: <1 = balanca (bounce elastico) ao soltar
 
+    // --- otimizacao (blocos) ---
+    private static final double RENDER_DIST = 48.0;          // alem disso nem desenha
+    private static final double ACTIVE_DIST2 = 24.0 * 24.0;  // alem disso: sem amassado e sem procurar entidades
+    private static final double CULL_COS = 0.20;             // descarta o que esta fora do cone de visao (~78 graus)
+
     public SquishyRenderer(BlockEntityRendererFactory.Context ctx) {}
+
+    @Override
+    public int getRenderDistance() { return (int) RENDER_DIST; }
 
     @Override
     public void render(SquishyBlockEntity be, float tickDelta, MatrixStack matrices,
@@ -37,6 +50,20 @@ public class SquishyRenderer implements BlockEntityRenderer<SquishyBlockEntity> 
 
         BlockPos pos = be.getPos();
         double now = world.getTime() + tickDelta;
+
+        // ---- descarte barato: atras da camera / fora do cone de visao (rendersOutsideBoundingBox desliga o culling do jogo)
+        Camera cam = MinecraftClient.getInstance().gameRenderer.getCamera();
+        Vec3d cp = cam.getPos();
+        double vx = pos.getX() + 0.5 - cp.x, vy = pos.getY() + 0.25 - cp.y, vz = pos.getZ() + 0.5 - cp.z;
+        double dist2 = vx * vx + vy * vy + vz * vz;
+        double reach = type.length * 0.5 + 1.0;                 // raio aproximado da malha
+        if (dist2 > reach * reach * 4.0) {
+            double yaw = Math.toRadians(cam.getYaw()), pitch = Math.toRadians(cam.getPitch());
+            double fx = -Math.sin(yaw) * Math.cos(pitch), fy = -Math.sin(pitch), fz = Math.cos(yaw) * Math.cos(pitch);
+            double dot = vx * fx + vy * fy + vz * fz;
+            if (dot < Math.sqrt(dist2) * CULL_COS - reach) return;
+        }
+        boolean active = dist2 < ACTIVE_DIST2;                   // perto o bastante para amassar
 
         // espaco da malha: X em [0, length] ao longo da fila, Z em [0, 1]. A parte do meio fica no centro do bloco.
         int len = type.length, m = type.masterPart();
@@ -53,7 +80,20 @@ public class SquishyRenderer implements BlockEntityRenderer<SquishyBlockEntity> 
 
         // 1) quem esta pisando e qual a profundidade (pes abaixo do topo = quanto amassa)
         float target = 0f, ex = 0.5f, ez = 0.5f, rad = be.radius;
-        for (LivingEntity le : world.getEntitiesByClass(LivingEntity.class, box, e -> !e.isSpectator())) {
+        if (active) {
+            // no maximo 1 consulta por tick quando tem algo acontecendo, 1 a cada 3 ticks quando esta parado
+            long tick = world.getTime();
+            boolean busy = be.hadContact || Math.abs(be.press) > 0.004f || Math.abs(be.vel) > 0.03f;
+            if (tick - be.queryTick >= (busy ? 1 : 3) || tick < be.queryTick) {
+                be.queryTick = tick;
+                List<LivingEntity> found = world.getEntitiesByClass(LivingEntity.class, box, e -> !e.isSpectator());
+                be.nearby = found.isEmpty() ? Collections.emptyList() : found;
+            }
+        } else if (!be.nearby.isEmpty()) {
+            be.nearby = Collections.emptyList();
+        }
+        for (LivingEntity le : be.nearby) {
+            if (le.isRemoved()) continue;
             Vec3d p = le.getLerpedPos(tickDelta);
             float feet = (float) (p.y - pos.getY());
             float depth = MathHelper.clamp(1f - feet / mesh.height, 0f, 0.95f);
@@ -65,6 +105,14 @@ public class SquishyRenderer implements BlockEntityRenderer<SquishyBlockEntity> 
                 ez = sin * rx + cos * rz + 0.5f;
                 rad = le.getWidth() * 0.5f + 0.08f;
             }
+        }
+
+        // repouso total: nada em cima e a mola ja parou -> pula a fisica e desenha a malha leve
+        if (target == 0f && !be.hadContact && Math.abs(be.press) < 0.004f && Math.abs(be.vel) < 0.03f) {
+            be.press = 0f; be.vel = 0f; be.lastTime = now;
+            DEFORM.active = false;
+            drawMesh(mesh, block, matrices, vcp, light, overlay, len, angle, meshOx);
+            return;
         }
 
         // 2) passo de tempo
@@ -100,6 +148,11 @@ public class SquishyRenderer implements BlockEntityRenderer<SquishyBlockEntity> 
         DEFORM.press = be.press;
         DEFORM.cx = be.cx; DEFORM.cz = be.cz; DEFORM.r = Math.max(0.12f, be.radius);
 
+        drawMesh(mesh, block, matrices, vcp, light, overlay, len, angle, meshOx);
+    }
+
+    private static void drawMesh(SquishyMesh mesh, SquishyBlock block, MatrixStack matrices, VertexConsumerProvider vcp,
+                                 int light, int overlay, int len, float angle, float meshOx) {
         matrices.push();
         if (len > 1) {
             matrices.translate(0.5, 0, 0.5);
@@ -126,7 +179,7 @@ public class SquishyRenderer implements BlockEntityRenderer<SquishyBlockEntity> 
         matrices.translate(0.5, 0.5, 0.5);
         matrices.scale(s, s, s);
         matrices.translate(-type.length / 2f, -mesh.height / 2f, -0.5);
-        mesh.render(null, matrices, vcp, block.bodyTexture, block.labelTexture, light, overlay);
+        mesh.render(null, matrices, vcp, block.bodyTexture, block.labelTexture, light, overlay);   // null = malha leve
         matrices.pop();
     }
 }

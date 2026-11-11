@@ -13,6 +13,8 @@ public class MeshLayer {
     public int[] tri;              // 3 indices por triangulo
     float[] fnx, fny, fnz;         // normais vindas do arquivo (so OBJ), usadas para orientar os triangulos
 
+    int[] restCol;                 // brilho (0..255) de cada vertice em repouso
+
     int[] weld;                    // id da posicao unica de cada vertice (para normais suaves)
     int weldCount;
     float[] bwx, bwy, bwz;         // normais suaves em repouso (por weld)

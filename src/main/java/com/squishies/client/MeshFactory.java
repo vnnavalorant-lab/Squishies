@@ -28,9 +28,22 @@ public final class MeshFactory {
 
     public static SquishyMesh build(SquishyType t) throws IOException {
         switch (t.meshKey) {
-            case "needoh":   return superellipsoid(t, 0.40f, 0.40f, true, 28, 56);
-            case "gumdrop":  return superellipsoid(t, 0.75f, 0.85f, false, 20, 56);
-            case "dumpling": return superellipsoid(t, 0.60f, 0.90f, false, 24, 64);
+            // malha densa (so usada enquanto amassa) + malha leve em repouso/de longe
+            case "needoh": {
+                SquishyMesh m = superellipsoid(t, 0.40f, 0.40f, true, 28, 56);
+                m.idle = superellipsoid(t, 0.40f, 0.40f, true, 20, 40);
+                return m;
+            }
+            case "gumdrop": {
+                SquishyMesh m = superellipsoid(t, 0.75f, 0.85f, false, 20, 56);
+                m.idle = superellipsoid(t, 0.75f, 0.85f, false, 14, 40);
+                return m;
+            }
+            case "dumpling": {
+                SquishyMesh m = superellipsoid(t, 0.60f, 0.90f, false, 24, 64);
+                m.idle = superellipsoid(t, 0.60f, 0.90f, false, 16, 44);
+                return m;
+            }
             // qualquer outro nome = um .obj em models/obj/<nome>.obj (ja entra no mesmo sistema de malha maleavel)
             default: return fromObj(t, new Identifier("squishies", "models/obj/" + t.meshKey + ".obj"));
         }
@@ -156,12 +169,19 @@ public final class MeshFactory {
         // mesma quantidade de subdivisoes em todas as camadas (corpo e etiqueta continuam colados ao deformar)
         int levels = subdivisionLevels(built);
         SquishyMesh mesh = new SquishyMesh();
-        for (MeshLayer l : built) {
-            for (int k = 0; k < levels; k++) l = l.subdivide();
-            mesh.layers.add(l);
+        for (MeshLayer l : built) mesh.layers.add(subdivideN(l, levels));
+        if (levels > 1) {      // malha leve (1 nivel) para repouso e distancia: ~4x menos vertices por frame
+            SquishyMesh idle = new SquishyMesh();
+            for (MeshLayer l : built) idle.layers.add(subdivideN(l, 1));
+            mesh.idle = idle;
         }
         mesh.finish();
         return mesh;
+    }
+
+    private static MeshLayer subdivideN(MeshLayer l, int n) {
+        for (int k = 0; k < n; k++) l = l.subdivide();
+        return l;
     }
 
     /** Quantas vezes subdividir: ate a maior aresta ficar pequena, respeitando o teto de triangulos. */

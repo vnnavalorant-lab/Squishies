@@ -17,3 +17,10 @@ Local: `gradle build` (Gradle 8.8 + Java 17).
 - Maciez: `SquishyRenderer.java` (OMEGA = rigidez, ZETA = quanto balanca) e `SquishyMesh.java` (formula do amassado).
 - Trocar o modelo do butter: substitua `assets/squishies/models/obj/butter.obj` (1o grupo = corpo, demais = etiqueta). F3+T recarrega.
 - Sons: coloque .ogg em `assets/squishies/sounds/` e edite `sounds.json` (hoje reaproveita sons do Minecraft).
+
+## Desempenho (FPS)
+- Cada modelo tem 2 malhas: **densa** (so usada enquanto alguem amassa, deformacao suave) e **leve** (repouso, longe e itens, ~4x menos vertices).
+- Fora do cone de visao ou atras da camera: nem desenha. Alem de 48 blocos: nao desenha. Alem de 24 blocos: so a malha leve, sem amassado.
+- A busca por entidades em cima do squishy roda no maximo 1x por tick (1x a cada 3 ticks quando esta parado), nao a cada frame.
+- Em repouso total (nada em cima e a mola parou) a fisica e o calculo de normais sao pulados; o brilho em repouso e pre-calculado.
+- Ajuste: `RENDER_DIST`, `ACTIVE_DIST2` e `CULL_COS` em `SquishyRenderer.java`; `MAX_EDGE` e `MAX_TRIS` em `MeshFactory.java`.

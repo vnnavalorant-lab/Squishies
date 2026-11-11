@@ -2,7 +2,11 @@ package com.squishies;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.math.BlockPos;
+
+import java.util.Collections;
+import java.util.List;
 
 /** Servidor: guarda se esta apertado (para os sons). Cliente: guarda a mola da animacao de amassar. */
 public class SquishyBlockEntity extends BlockEntity {
@@ -14,6 +18,8 @@ public class SquishyBlockEntity extends BlockEntity {
     public float radius = 0.3f;
     public double lastTime = Double.NaN;
     public boolean hadContact;
+    public long queryTick = Long.MIN_VALUE;  // ultimo tick em que procuramos entidades em cima (cache do cliente)
+    public List<LivingEntity> nearby = Collections.emptyList();
 
     public SquishyBlockEntity(BlockPos pos, BlockState state) {
         super(SquishiesMod.SQUISHY_BE, pos, state);

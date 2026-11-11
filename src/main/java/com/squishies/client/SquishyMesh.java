@@ -16,6 +16,10 @@ import java.util.List;
 public class SquishyMesh {
     public final List<MeshLayer> layers = new ArrayList<>();
     public float height = 0.2f;
+    /** Versao mais leve da mesma forma, usada em repouso e de longe (null = usa esta mesma). */
+    public SquishyMesh idle;
+
+    public SquishyMesh idleMesh() { return idle != null ? idle : this; }
 
     // luz fixa para um brilho falso (especular) que se move conforme a superficie amassa
     private static final float HX = 0.35f, HY = 0.85f, HZ = 0.40f;
@@ -26,14 +30,29 @@ public class SquishyMesh {
         for (MeshLayer l : layers) {
             l.finish();
             for (float yy : l.y) h = Math.max(h, yy);
+            // brilho em repouso e fixo: calcula uma vez por vertice em vez de a cada frame
+            int n = l.x.length;
+            l.restCol = new int[n];
+            for (int i = 0; i < n; i++) {
+                int w = l.weld[i];
+                l.restCol[i] = shade(l.bwx[w], l.bwy[w], l.bwz[w]);
+            }
         }
         height = Math.max(h, 0.02f);
+        if (idle != null) idle.finish();
+    }
+
+    private static int shade(float vnx, float vny, float vnz) {
+        float s = Math.max(0f, vnx * HX + vny * HY + vnz * HZ);
+        s = s * s; s = s * s;                 // ^4: brilho concentrado
+        return (int) (255f * (0.86f + 0.14f * Math.min(1f, s * 1.5f)));
     }
 
     public void render(MeshDeform d, MatrixStack matrices, VertexConsumerProvider vcp,
                        Identifier bodyTex, Identifier labelTex, int light, int overlay) {
         MatrixStack.Entry e = matrices.peek();
-        for (MeshLayer l : layers) {
+        List<MeshLayer> use = (d != null && d.active) ? layers : idleMesh().layers;
+        for (MeshLayer l : use) {
             Identifier tex = l.slot.equals("label") ? labelTex : bodyTex;
             VertexConsumer vc = vcp.getBuffer(RenderLayer.getEntityCutoutNoCull(tex));
             renderLayer(l, d, vc, e, light, overlay);
@@ -44,8 +63,9 @@ public class SquishyMesh {
         int n = l.x.length;
         float[] px = l.x, py = l.y, pz = l.z;
         float[] nx = l.bwx, ny = l.bwy, nz = l.bwz;
+        boolean deforming = d != null && d.active;
 
-        if (d != null && d.active) {
+        if (deforming) {
             float r = d.r, k = d.press, H = height;
             float inv = 1f / (1.4f * r * r);
             float[] sx = l.sx, sy = l.sy, sz = l.sz;
@@ -77,9 +97,7 @@ public class SquishyMesh {
                 int i = tri[t + (c > 2 ? 2 : c)];
                 int w = l.weld[i];
                 float vnx = nx[w], vny = ny[w], vnz = nz[w];
-                float s = Math.max(0f, vnx * HX + vny * HY + vnz * HZ);
-                s = s * s; s = s * s;                 // ^4: brilho concentrado
-                int col = (int) (255f * (0.86f + 0.14f * Math.min(1f, s * 1.5f)));
+                int col = deforming ? shade(vnx, vny, vnz) : l.restCol[i];
                 vc.vertex(pm, px[i] + off * vnx, py[i] + off * vny, pz[i] + off * vnz)
                         .color(col, col, col, 255)
                         .texture(l.u[i], l.v[i])
