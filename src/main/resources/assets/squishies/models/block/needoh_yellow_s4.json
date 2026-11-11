@@ -1,0 +1,104 @@
+{
+  "textures": {
+    "t": "squishies:block/needoh_yellow",
+    "particle": "squishies:block/needoh_yellow"
+  },
+  "elements": [
+    {
+      "from": [
+        5.32,
+        0,
+        4.12
+      ],
+      "to": [
+        10.68,
+        9.2,
+        11.88
+      ],
+      "faces": {
+        "north": {
+          "texture": "#t"
+        },
+        "east": {
+          "texture": "#t"
+        },
+        "south": {
+          "texture": "#t"
+        },
+        "west": {
+          "texture": "#t"
+        },
+        "up": {
+          "texture": "#t"
+        },
+        "down": {
+          "texture": "#t"
+        }
+      }
+    },
+    {
+      "from": [
+        4.12,
+        0,
+        5.32
+      ],
+      "to": [
+        11.88,
+        9.2,
+        10.68
+      ],
+      "faces": {
+        "north": {
+          "texture": "#t"
+        },
+        "east": {
+          "texture": "#t"
+        },
+        "south": {
+          "texture": "#t"
+        },
+        "west": {
+          "texture": "#t"
+        },
+        "up": {
+          "texture": "#t"
+        },
+        "down": {
+          "texture": "#t"
+        }
+      }
+    },
+    {
+      "from": [
+        4.12,
+        1.2,
+        4.12
+      ],
+      "to": [
+        11.88,
+        8.0,
+        11.88
+      ],
+      "faces": {
+        "north": {
+          "texture": "#t"
+        },
+        "east": {
+          "texture": "#t"
+        },
+        "south": {
+          "texture": "#t"
+        },
+        "west": {
+          "texture": "#t"
+        },
+        "up": {
+          "texture": "#t"
+        },
+        "down": {
+          "texture": "#t"
+        }
+      }
+    }
+  ]
+}
