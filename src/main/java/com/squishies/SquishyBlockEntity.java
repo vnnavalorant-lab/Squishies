@@ -18,7 +18,7 @@ public class SquishyBlockEntity extends BlockEntity {
     public float radius = 0.3f;
     public double lastTime = Double.NaN;
     public boolean hadContact;
-    public long queryTick = Long.MIN_VALUE;  // ultimo tick em que procuramos entidades em cima (cache do cliente)
+    public long queryTick = -1000L;         // ultimo tick em que procuramos entidades em cima (cache do cliente)
     public List<LivingEntity> nearby = Collections.emptyList();
 
     public SquishyBlockEntity(BlockPos pos, BlockState state) {

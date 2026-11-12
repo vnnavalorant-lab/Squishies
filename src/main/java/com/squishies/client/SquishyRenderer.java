@@ -86,7 +86,7 @@ public class SquishyRenderer implements BlockEntityRenderer<SquishyBlockEntity> 
             // no maximo 1 consulta por tick quando tem algo acontecendo, 1 a cada 3 ticks quando esta parado
             long tick = world.getTime();
             boolean busy = be.hadContact || Math.abs(be.press) > 0.004f || Math.abs(be.vel) > 0.03f;
-            if (tick - be.queryTick >= (busy ? 1 : 3) || tick < be.queryTick) {
+            if (be.queryTick < 0 || tick - be.queryTick >= (busy ? 1 : 3) || tick < be.queryTick) {   // (sem subtrair Long.MIN_VALUE: estourava)
                 be.queryTick = tick;
                 List<LivingEntity> found = world.getEntitiesByClass(LivingEntity.class, box, e -> !e.isSpectator());
                 be.nearby = found.isEmpty() ? Collections.emptyList() : found;
