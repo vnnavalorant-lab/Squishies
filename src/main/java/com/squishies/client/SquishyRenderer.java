@@ -67,7 +67,7 @@ public class SquishyRenderer implements BlockEntityRenderer<SquishyBlockEntity> 
 
         // espaco da malha: X em [0, cellsX] ao longo do FACING, Z em [0, cellsZ] para a direita. O bloco mestre fica no centro.
         int cx = type.cellsX, cz = type.cellsZ, mi = type.masterI(), mj = type.masterJ();
-        boolean multi = type.cells() > 1;
+        boolean multi = type.cells() > 1 || type.directional;   // directional: 1x1 que gira com o FACING
         Direction f = multi ? state.get(SquishyBlock.FACING) : Direction.EAST;
         Direction across = f.rotateYClockwise();
         float angle = multi ? 270f - f.asRotation() : 0f;       // gira o eixo X da malha para a direcao do FACING

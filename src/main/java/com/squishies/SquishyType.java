@@ -28,6 +28,7 @@ public class SquishyType {
     public final float pressVolume;
 
     public int meshRot = 0;           // quartos de volta (em Y) aplicados ao OBJ para o rosto/frente apontar para -X da malha
+    public boolean directional = false; // 1x1 que gira conforme o FACING (tem rosto/frente)
     public String sharedLabel = null; // textura de etiqueta/rosto unica para todas as variantes (null = <variante>_label.png)
 
     private final Map<Direction, VoxelShape[]> outline = new EnumMap<>(Direction.class);
@@ -51,6 +52,7 @@ public class SquishyType {
     }
 
     public SquishyType withMeshRot(int quarterTurns) { this.meshRot = ((quarterTurns % 4) + 4) % 4; return this; }
+    public SquishyType withDirectional() { this.directional = true; return this; }
     public SquishyType withSharedLabel(String name) { this.sharedLabel = name; return this; }
 
     public int cells() { return cellsX * cellsZ; }
@@ -76,6 +78,14 @@ public class SquishyType {
                 (Math.max(wx0, wx1) + 0.5) * 16.0, heightPx, (Math.max(wz0, wz1) + 0.5) * 16.0);
     }
 
-    public VoxelShape outline(Direction f, int part) { return outline.get(f)[part]; }
-    public VoxelShape collision(Direction f, int part) { return collision.get(f)[part]; }
+    // PART vai de 0 a MAX_PARTS-1 em todos os tipos, entao o Minecraft cria estados (e pede a forma deles)
+    // para partes que nao existem neste tipo (ex.: tipos 1x1 so tem a parte 0). Nesses casos: forma vazia.
+    public VoxelShape outline(Direction f, int part) {
+        VoxelShape[] a = outline.get(f);
+        return part >= 0 && part < a.length ? a[part] : VoxelShapes.empty();
+    }
+    public VoxelShape collision(Direction f, int part) {
+        VoxelShape[] a = collision.get(f);
+        return part >= 0 && part < a.length ? a[part] : VoxelShapes.empty();
+    }
 }
