@@ -87,10 +87,12 @@ public class SquishiesMod implements ModInitializer {
         // meshRot=1 vira o rosto do OBJ (+Z) para -X da malha, ou seja, de frente para quem colocou o bloco.
         TYPES.put("face_dumpling", new SquishyType("face_dumpling", "face_dumpling", 2, 2, 1.5f, 1.02f, 1.5f, 0.45f,
                 ModSounds.DUMPLING_SQUISH, null, 1.0f).withMeshRot(1).withSharedLabel("face_dumpling_face"));
-        // axolote: 1 bloco, de frente para quem colocou (directional). Malha vem de models/obj/axolotl.obj;
-        // w = profundidade (eixo X da malha), d = largura (eixo Z); meshRot=1 vira a frente do OBJ (+Z) para -X da malha.
-        TYPES.put("axolotl", new SquishyType("axolotl", "axolotl", 1, 1, 0.36f, 0.90f, 0.62f, 0.45f,
-                ModSounds.DUMPLING_SQUISH, null, 1.0f).withMeshRot(1).withDirectional());
+        // axolote (Axy): 1 bloco, de frente para quem colocou (directional). Malha vem de models/obj/axolotl.obj
+        // (OBJ simplificado do axy_squishie, com UVs de skin 64x64); a textura e textures/entity/axolotl.png (texturedBody).
+        // w = profundidade (eixo X da malha, do rosto ate a ponta do rabo), d = largura (eixo Z);
+        // meshRot=1 vira a frente do OBJ (+Z) para -X da malha. Proporcao do modelo preservada (altura 0,90).
+        TYPES.put("axolotl", new SquishyType("axolotl", "axolotl", 1, 1, 0.60f, 0.90f, 0.53f, 0.45f,
+                ModSounds.DUMPLING_SQUISH, null, 1.0f).withMeshRot(1).withDirectional().withTexturedBody());
         List<Item> items = new ArrayList<>();
         for (String[] b : BLOCKS) {
             Identifier id = new Identifier(MOD_ID, b[0]);

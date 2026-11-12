@@ -29,6 +29,7 @@ public class SquishyType {
 
     public int meshRot = 0;           // quartos de volta (em Y) aplicados ao OBJ para o rosto/frente apontar para -X da malha
     public boolean directional = false; // 1x1 que gira conforme o FACING (tem rosto/frente)
+    public boolean texturedBody = false; // OBJ inteiro com UVs proprios e uma unica textura (textures/entity/<variante>.png), sem camada de etiqueta
     public String sharedLabel = null; // textura de etiqueta/rosto unica para todas as variantes (null = <variante>_label.png)
 
     private final Map<Direction, VoxelShape[]> outline = new EnumMap<>(Direction.class);
@@ -52,6 +53,7 @@ public class SquishyType {
     }
 
     public SquishyType withMeshRot(int quarterTurns) { this.meshRot = ((quarterTurns % 4) + 4) % 4; return this; }
+    public SquishyType withTexturedBody() { this.texturedBody = true; return this; }
     public SquishyType withDirectional() { this.directional = true; return this; }
     public SquishyType withSharedLabel(String name) { this.sharedLabel = name; return this; }
 

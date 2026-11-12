@@ -117,7 +117,8 @@ public final class MeshFactory {
                     case "v":  V.add(new float[]{f(p[1]), f(p[2]), f(p[3])}); break;
                     case "vt": VT.add(new float[]{f(p[1]), f(p[2])}); break;
                     case "vn": VN.add(new float[]{f(p[1]), f(p[2]), f(p[3])}); break;
-                    case "g":  cur = new Group(p.length > 1 ? p[1] : "g" + groups.size()); groups.add(cur); break;
+                    case "g":  if (t.texturedBody && cur != null) break;   // corpo texturizado: todos os grupos viram uma camada so
+                              cur = new Group(p.length > 1 ? p[1] : "g" + groups.size()); groups.add(cur); break;
                     case "f": {
                         if (cur == null) { cur = new Group("g0"); groups.add(cur); }
                         int[] idx = new int[p.length - 1];
@@ -165,7 +166,7 @@ public final class MeshFactory {
                 l.x[i] = (v[0] - cx) * scaleX + outX;
                 l.y[i] = (v[1] - minY) * scaleY;
                 l.z[i] = (v[2] - cz) * scaleZ + outZ;
-                if (body) { l.u[i] = 0.5f; l.v[i] = 0.5f; }   // corpo usa cor lisa
+                if (body && !t.texturedBody) { l.u[i] = 0.5f; l.v[i] = 0.5f; }   // corpo usa cor lisa
                 else { l.u[i] = v[3]; l.v[i] = 1f - v[4]; }
                 l.fnx[i] = v[5]; l.fny[i] = v[6]; l.fnz[i] = v[7];
             }
