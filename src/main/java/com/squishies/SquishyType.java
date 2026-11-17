@@ -17,7 +17,7 @@ import java.util.Map;
  * h de altura) fica centralizado nessa grade; cada bloco da grade recebe so o pedaco da hitbox que lhe cabe.
  */
 public class SquishyType {
-    public static final int MAX_PARTS = 4;
+    public static final int MAX_PARTS = 16;
 
     public final String id;
     public final String meshKey;      // qual malha o cliente usa: needoh, gumdrop, dumpling, butter ou o nome de um .obj em models/obj

@@ -13,6 +13,8 @@ public class ModSounds {
     public static final SoundEvent CRUNCHY_PRESS = reg("crunchy_press");
     public static final SoundEvent CRUNCHY_RELEASE = reg("crunchy_release");
     public static final SoundEvent DUMPLING_SQUISH = reg("dumpling_squish");
+    public static final SoundEvent POPIT_PRESS = reg("popit_press");
+    public static final SoundEvent POPIT_RELEASE = reg("popit_release");
 
     private static SoundEvent reg(String name) {
         Identifier id = new Identifier(SquishiesMod.MOD_ID, name);
