@@ -44,9 +44,52 @@ public final class MeshFactory {
                 m.idle = superellipsoid(t, 0.60f, 0.90f, false, 16, 44);
                 return m;
             }
+            // formas procedurais novas (ShapeMeshes): varias camadas coloridas, mesmas regras de amassado
+            case "donut":    return shapes(t, ShapeMeshes::donut);
+            case "icecream": return shapes(t, ShapeMeshes::icecream);
+            case "mochi":    return shapes(t, ShapeMeshes::mochi);
+            case "pizza":    return shapes(t, ShapeMeshes::pizza);
+            case "popit":    return shapes(t, ShapeMeshes::popit);
             // qualquer outro nome = um .obj em models/obj/<nome>.obj (ja entra no mesmo sistema de malha maleavel)
             default: return fromObj(t, new Identifier("squishies", "models/obj/" + t.meshKey + ".obj"));
         }
+    }
+
+    // ---------------------------------------------------------------- formas procedurais (ShapeMeshes)
+    /** Monta a malha densa e a leve de uma forma; o tamanho final vem do SquishyType (w x h x d), igual ao caminho do OBJ. */
+    private static SquishyMesh shapes(SquishyType t, ShapeMeshes.Gen gen) {
+        List<MeshLayer> dense = gen.make(1), light = gen.make(0);
+        float[] bb = bounds(dense);   // a mesma caixa nas duas malhas: nao muda de tamanho ao trocar de uma para a outra
+        float sx = t.w / (bb[3] - bb[0]), sy = t.h / (bb[4] - bb[1]), sz = t.d / (bb[5] - bb[2]);
+        float cx = (bb[0] + bb[3]) / 2f, cz = (bb[2] + bb[5]) / 2f, outX = t.cellsX / 2f, outZ = t.cellsZ / 2f;
+        for (List<MeshLayer> ls : List.of(dense, light)) {
+            for (MeshLayer l : ls) {
+                for (int i = 0; i < l.x.length; i++) {
+                    l.x[i] = (l.x[i] - cx) * sx + outX;
+                    l.y[i] = (l.y[i] - bb[1]) * sy;
+                    l.z[i] = (l.z[i] - cz) * sz + outZ;
+                }
+            }
+        }
+        SquishyMesh idle = new SquishyMesh();
+        idle.layers.addAll(light);
+        SquishyMesh mesh = new SquishyMesh();
+        mesh.layers.addAll(dense);
+        mesh.idle = idle;
+        mesh.finish();
+        return mesh;
+    }
+
+    private static float[] bounds(List<MeshLayer> layers) {
+        float[] b = {Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE, -Float.MAX_VALUE, -Float.MAX_VALUE, -Float.MAX_VALUE};
+        for (MeshLayer l : layers) {
+            for (int i = 0; i < l.x.length; i++) {
+                b[0] = Math.min(b[0], l.x[i]); b[3] = Math.max(b[3], l.x[i]);
+                b[1] = Math.min(b[1], l.y[i]); b[4] = Math.max(b[4], l.y[i]);
+                b[2] = Math.min(b[2], l.z[i]); b[5] = Math.max(b[5], l.z[i]);
+            }
+        }
+        return b;
     }
 
     // ---------------------------------------------------------------- superelipsoide

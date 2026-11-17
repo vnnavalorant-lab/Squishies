@@ -68,5 +68,25 @@
         "volume": 1.0
       }
     ]
+  },
+  "popit_press": {
+    "sounds": [
+      {
+        "name": "block.stone_button.click_on",
+        "type": "event",
+        "pitch": 1.9,
+        "volume": 1.0
+      }
+    ]
+  },
+  "popit_release": {
+    "sounds": [
+      {
+        "name": "block.stone_button.click_off",
+        "type": "event",
+        "pitch": 1.7,
+        "volume": 1.0
+      }
+    ]
   }
 }

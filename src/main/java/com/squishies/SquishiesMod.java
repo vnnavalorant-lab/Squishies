@@ -70,7 +70,27 @@ public class SquishiesMod implements ModInitializer {
         {"face_dumpling_red", "face_dumpling"},
         {"face_dumpling_yellow", "face_dumpling"},
         {"face_dumpling_orange", "face_dumpling"},
-        {"axolotl", "axolotl"}
+        {"axolotl", "axolotl"},
+        {"donut_blue", "donut"},
+        {"donut_pink", "donut"},
+        {"donut_choco", "donut"},
+        {"donut_mint", "donut"},
+        {"icecream_strawberry", "icecream"},
+        {"icecream_mint", "icecream"},
+        {"icecream_vanilla", "icecream"},
+        {"icecream_chocolate", "icecream"},
+        {"icecream_blueberry", "icecream"},
+        {"mochi_rainbow", "mochi"},
+        {"mochi_pink", "mochi"},
+        {"mochi_blue", "mochi"},
+        {"mochi_mint", "mochi"},
+        {"pizza_pepperoni", "pizza"},
+        {"pizza_cheese", "pizza"},
+        {"pizza_olive", "pizza"},
+        {"popit_rainbow", "popit"},
+        {"popit_pastel", "popit"},
+        {"popit_ocean", "popit"},
+        {"popit_sunset", "popit"}
     };
 
     @Override
@@ -93,6 +113,23 @@ public class SquishiesMod implements ModInitializer {
         // meshRot=1 vira a frente do OBJ (+Z) para -X da malha. Proporcao do modelo preservada (altura 0,90).
         TYPES.put("axolotl", new SquishyType("axolotl", "axolotl", 1, 1, 0.60f, 0.90f, 0.53f, 0.45f,
                 ModSounds.DUMPLING_SQUISH, null, 1.0f).withMeshRot(1).withDirectional().withTexturedBody());
+
+        // --- formatos novos (malhas procedurais em client/ShapeMeshes.java; medidas = caixa da malha, em blocos) ---
+        // donut: rosquinha com cobertura e granulado
+        TYPES.put("donut", new SquishyType("donut", "donut", 1, 1, 0.93f, 0.41f, 0.93f, 0.45f,
+                ModSounds.DUMPLING_SQUISH, null, 1.0f));
+        // sorvete de casquinha (ponta para baixo)
+        TYPES.put("icecream", new SquishyType("icecream", "icecream", 1, 1, 0.68f, 0.93f, 0.67f, 0.50f,
+                ModSounds.BUTTER_PRESS, ModSounds.BUTTER_RELEASE, 1.0f));
+        // mochi com rosto numa bandeja de madeira: o rosto aponta para quem colocou o bloco
+        TYPES.put("mochi", new SquishyType("mochi", "mochi", 1, 1, 0.92f, 0.41f, 0.92f, 0.45f,
+                ModSounds.DUMPLING_SQUISH, null, 1.0f).withDirectional().withSharedLabel("mochi_face"));
+        // fatia de pizza: a ponta aponta para quem colocou o bloco
+        TYPES.put("pizza", new SquishyType("pizza", "pizza", 1, 1, 0.96f, 0.21f, 0.74f, 0.50f,
+                ModSounds.CRUNCHY_PRESS, ModSounds.CRUNCHY_RELEASE, 1.0f).withDirectional());
+        // pop-it: placa com 6x6 bolhas
+        TYPES.put("popit", new SquishyType("popit", "popit", 1, 1, 0.96f, 0.125f, 0.96f, 0.55f,
+                ModSounds.POPIT_PRESS, ModSounds.POPIT_RELEASE, 1.0f));
         List<Item> items = new ArrayList<>();
         for (String[] b : BLOCKS) {
             Identifier id = new Identifier(MOD_ID, b[0]);

@@ -31,3 +31,14 @@ Local: `gradle build` (Gradle 8.8 + Java 17).
 - 13 cores (white, brown, black, gray, navy, pink, purple, blue, green, lime, red, yellow, orange): so mudam a textura lisa do corpo.
 - Para adicionar mais cores: crie `textures/entity/face_dumpling_<cor>.png` (16x16 lisa), os arquivos de blockstate/model/item/loot (copie de uma cor existente) e uma linha em `SquishiesMod.BLOCKS`.
 - Grades multibloco: `SquishyType(cellsX, cellsZ, ...)`, ate 4 blocos no total.
+
+## Squishies novos: Donut, Sorvete, Mochi, Pizza e Pop-It (20 blocos)
+Formas geradas por codigo em `client/ShapeMeshes.java` (varias camadas coloridas por modelo, mesmo sistema de amassado dos outros).
+- **Donut** (4: blue, pink, choco, mint): massa + cobertura de borda ondulada + granulado colorido.
+- **Ice Cream** (5: strawberry, mint, vanilla, chocolate, blueberry): casquinha de waffle (ponta para baixo) + sorvete em espiral.
+- **Mochi** (4: rainbow, pink, blue, mint): cupula com rosto feliz em bandeja de madeira; o rosto aponta para quem colocou. O rainbow tem degrade conico igual ao de referencia.
+- **Pizza** (3: pepperoni, cheese, olive): fatia com borda grossa e coberturas; a ponta aponta para quem colocou.
+- **Pop-It** (4: rainbow, pastel, ocean, sunset): placa 6x6 de bolhas, uma cor por fileira; som de "pop" proprio.
+- Textura de cada variante: `textures/entity/<variante>.png` (64x16): paleta 4x4 de 4 px em x 0..15 + faixa de 48 px em x 16..63 (ver comentario no topo de `ShapeMeshes`). O rosto do mochi e `textures/entity/mochi_face.png`.
+- Para adicionar cor: copie a textura de uma variante, mude as cores, crie blockstate/model/item/loot/lang e uma linha em `SquishiesMod.BLOCKS`.
+- Tamanhos/colisao/sons: `SquishiesMod.java` (tipos `donut`, `icecream`, `mochi`, `pizza`, `popit`); a malha e escalada para w x h x d do tipo.
